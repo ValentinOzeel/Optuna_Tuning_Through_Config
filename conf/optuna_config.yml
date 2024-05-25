@@ -1,0 +1,9 @@
+  OPTUNA_PARAMS:  
+      ###### Model's hyperparameter tuning
+    - ['int_number_grid', 'suggest_grid', [2, 7, 10, 34], {}]
+    - ['int_number', 'suggest_int', [500, 800], {}]
+    - ['float_number', 'suggest_float', [0.001, 0.003], {'log': True}]
+
+
+  OPTUNA_FROZEN_PARAMS:
+    frozen_number: 10

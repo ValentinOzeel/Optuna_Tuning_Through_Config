@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "optuna_finetuning_through_config"
+version = "0.1.0"
+description = "A project for hyperparameter tuning with Optuna from yaml configuration file"
+authors = ["Valentin Ozeel <your.email@example.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ValentinOzeel/optuna_finetuning_through_config"
+packages = [{include = "optuna_finetuning_through_config"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^2.5"
+optuna = "^3.0"
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+optuna-finetuning = "src.main:main"
+
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+flake8 = "^3.9.2"
+black = "^21.5b1"
