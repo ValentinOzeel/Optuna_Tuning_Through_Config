@@ -1,4 +1,6 @@
-from src.optuna_tuning import OptunaFinetuning
+from optuna_tuning_through_config.optuna_through_config import OptunaFinetuning
+
+import time
 
 # Example of a user-defined objective function
 def user_objective(params):
@@ -9,8 +11,9 @@ def user_objective(params):
         'int_number', params['int_number'], '\n',
         'float_number', params['float_number'], '\n',
           )
+    time.sleep(5)
     # Example: optimizing a simple quadratic function
-    return (params['int_number'] - 2) ** 2
+    return ((params['frozen_number'] + params['int_number'] + params['int_number_grid']) * params['float_number']) ** 2
 
 # Example usage
 optuna_finetuning = OptunaFinetuning(
@@ -22,5 +25,4 @@ optuna_finetuning = OptunaFinetuning(
 )
 
 # Run the tuning by calling the instance
-study_trials, best_trials = optuna_finetuning()
-
+study_trials, best_trials, best_trials_param_range_df, best_trials_param_distrib_plot, param_min_max_df = optuna_finetuning()

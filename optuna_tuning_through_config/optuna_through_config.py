@@ -1,21 +1,25 @@
 from typing import List, Dict, Callable
+import pandas as pd 
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 import optuna
 from pydantic import ValidationError
 
-from .decorators import trials_counter, timer
+from .decorators import timer_and_counter, skip_trial_on_keypress_n
 from .optuna_pydantic import OptunaPydantic
 from .secondary_module import colorize, get_config
 
 
 class OptunaFinetuning:
-    def __init__(self, objective:Callable, optuna_config_path:str, metrics_to_optimize:List[str], directions:List[str], n_trials:int):
+    def __init__(self, objective:Callable, optuna_config_path:str, metrics_to_optimize:List[str], directions:List[str], n_trials:int, top_percent_trials:int=20):
         
         self.objective = objective
         self.optuna_config_path = optuna_config_path
         self.metrics_to_optimize = metrics_to_optimize
         self.directions = directions
         self.n_trials = n_trials
+        self.top_percent_trials = top_percent_trials
         self.trials_counter = 0
         self.config = None
                 
@@ -23,7 +27,8 @@ class OptunaFinetuning:
                               'optuna_config_path':optuna_config_path, 
                               'metrics_to_optimize':metrics_to_optimize, 
                               'directions':directions, 
-                              'n_trials':n_trials})
+                              'n_trials':n_trials,
+                              'top_percent_trials':top_percent_trials})
 
 
 
@@ -50,9 +55,9 @@ class OptunaFinetuning:
         else:
             raise Warning("Could not find the dictionnary entry named 'OPTUNA_FROZEN_PARAMS' in the optuna config file.")
         
-        
-    @trials_counter
-    @timer
+
+    @timer_and_counter
+    @skip_trial_on_keypress_n
     def _objective(self, trial):
         params = self._set_trial_params(trial)
         return self.objective(params)
@@ -73,7 +78,10 @@ class OptunaFinetuning:
         self._print_trials(study.best_trials, 'Results best trials: ', 'LIGHTRED_EX')
   
         
-        return study.trials, study.best_trials
+        best_trials_param_range_df, param_min_max_df = self._get_top_trials_param_ranges(study.trials)
+        best_trials_param_distrib_plot = self._plot_param_distributions(best_trials_param_range_df)
+        
+        return [study.trials, study.best_trials, best_trials_param_range_df, best_trials_param_distrib_plot, param_min_max_df]
             
             
             
@@ -88,7 +96,6 @@ class OptunaFinetuning:
                 trial_value = float(trial_value)
                                
             elif 'categorical' in suggest_type:
-                print('BBBB', suggest_type)
                 trial_value = getattr(trial, suggest_type)(param_name, param_range)
             
             else:
@@ -117,11 +124,62 @@ class OptunaFinetuning:
 
     
 
+
+    def _get_top_trials_param_ranges(self, trials):
+        # Sort trials by the average of their objective values
+        trials_except_skipped = [trial for trial in trials if trial.values]
+        
+        if not trials_except_skipped:
+            raise ValueError(f'All trials have skipped.\n\n')
+        
+        sorted_trials = sorted(trials_except_skipped, key=lambda x: x.values, reverse=True)
+        top_n = int(len(sorted_trials) * self.top_percent_trials / 100)
+            
+
+        top_trials = sorted_trials[:top_n] if top_n >= len(trials_except_skipped) else trials_except_skipped
         
         
+        param_ranges = {'trial_number': []}
+        for trial in top_trials:
+            param_ranges['trial_number'].append(trial.number)
+            for param, value in trial.params.items():
+                if param not in param_ranges:
+                    param_ranges[param] = []
+                param_ranges[param].append(value)
+
+        # Collecting the parameter ranges into a list of dictionaries
+        data = []
+        for param, values in param_ranges.items():
+            data.append({
+                'Parameter': param,
+                'Min': min(values),
+                'Max': max(values)
+            })
         
+        param_min_max_df = pd.DataFrame(data)
+
+        print(colorize(f'\n\nParameter range of top {str(self.top_percent_trials)}% trials\n', 'LIGHTYELLOW_EX'), param_min_max_df)
+    
+        return pd.DataFrame(param_ranges), param_min_max_df
+
+
+    def _plot_param_distributions(self, param_df: pd.DataFrame):
         
+        # Plot using seaborn pair plot with hue set to trial_number
+        pair_plot = sns.pairplot(param_df, hue='trial_number', palette='viridis', diag_kind='kde')
+       
+       # pair_plot.figure.suptitle("Parameter Distributions of Top 20% Trials", y=1.02)
+
+        fig = pair_plot._figure
+        fig.savefig("best_trials_parameter_distributions.png") 
+
+        plt.ion()
+        plt.draw() 
+        plt.pause(30)
+        plt.ioff()
+        plt.close()
         
-        
-        
+        return fig
+
+
         
