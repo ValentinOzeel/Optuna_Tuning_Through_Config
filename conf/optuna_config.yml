@@ -1,6 +1,7 @@
   OPTUNA_PARAMS:  
       ###### Model's hyperparameter tuning
-    - ['int_number_grid', 'suggest_grid', [2, 7, 10, 34], {}]
+    - ['categorical_entries', 'suggest_categorical', ['aa', 'bb', 'cc'], {}]
+    - ['int_number_grid', 'suggest_grid', [65, 78, 87, 99, 103], {}]
     - ['int_number', 'suggest_int', [500, 800], {}]
     - ['float_number', 'suggest_float', [0.001, 0.003], {'log': True}]
 

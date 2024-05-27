@@ -8,6 +8,13 @@ from .secondary_module import colorize
 
 
 def timer_and_counter(func):
+    """
+    Decorator to measure the execution time of a function and increment a trial counter.
+    Args:
+        func (Callable): The function to be decorated.
+    Returns:
+        Callable: The wrapped function with added timer and counter functionality.
+    """
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         
@@ -32,6 +39,13 @@ def timer_and_counter(func):
 
 
 def skip_trial_on_keypress_n(func):
+    """
+    Decorator to allow skipping the trial on a ctrl+c keypress event.
+    Args:
+        func (Callable): The function to be decorated.
+    Returns:
+        Callable: The wrapped function with keypress event handling.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
 

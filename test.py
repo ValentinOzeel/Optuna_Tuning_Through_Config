@@ -11,9 +11,11 @@ def user_objective(params):
         'int_number', params['int_number'], '\n',
         'float_number', params['float_number'], '\n',
           )
-    time.sleep(5)
+    #time.sleep(5)
     # Example: optimizing a simple quadratic function
-    return ((params['frozen_number'] + params['int_number'] + params['int_number_grid']) * params['float_number']) ** 2
+    return ((params['frozen_number'] + params['int_number'] + params['int_number_grid']) / params['float_number']) ** 2
+
+    
 
 # Example usage
 optuna_finetuning = OptunaFinetuning(
@@ -21,7 +23,8 @@ optuna_finetuning = OptunaFinetuning(
     optuna_config_path='conf\optuna_config.yml',
     metrics_to_optimize=['x_quadratic_func'],
     directions=['maximize'],
-    n_trials=10
+    n_trials=1000,
+    top_percent_trials=30
 )
 
 # Run the tuning by calling the instance
